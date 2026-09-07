@@ -1,0 +1,424 @@
+/* Standalone download control — mirrors X share hit-target, does not style Share */
+.xsave-harvester {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  flex-basis: auto !important;
+  min-width: 36px;
+  align-self: center;
+}
+
+.xsave-harvester-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  outline: none;
+  /* X action icon grey; 15px matches X chrome so 1.25em == Share */
+  color: rgb(113, 118, 123);
+  font-size: 15px;
+  min-height: 36px;
+  min-width: 36px;
+  line-height: 1;
+}
+
+.xsave-harvester-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34.75px;
+  height: 34.75px;
+}
+
+.xsave-harvester-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+  pointer-events: none;
+}
+
+.xsave-harvester-btn svg {
+  position: relative;
+  z-index: 1;
+  /* Same contract as X action icons */
+  width: 1.25em;
+  height: 1.25em;
+  fill: currentColor;
+  vertical-align: text-bottom;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Gold hover like Media Harvest; Share keeps its own blue hover untouched */
+.xsave-harvester-btn:hover {
+  color: rgb(241, 185, 26);
+}
+
+.xsave-harvester-btn:hover .xsave-harvester-bg {
+  background-color: rgba(241, 185, 26, 0.1);
+}
+
+.xsave-harvester-btn:active .xsave-harvester-bg {
+  background-color: rgba(241, 185, 26, 0.2);
+}
+
+.xsave-harvester-btn.xsave-downloading,
+.xsave-harvester-btn.twitterdl-loading {
+  color: rgb(29, 155, 240);
+  pointer-events: none;
+}
+
+.xsave-harvester-btn.xsave-downloading svg,
+.xsave-harvester-btn.twitterdl-loading svg {
+  animation: xsave-spin 0.8s linear infinite;
+}
+
+.xsave-harvester-btn.xsave-done,
+.xsave-harvester-btn.twitterdl-done {
+  color: #00ba7c;
+}
+
+.xsave-harvester-btn.xsave-error {
+  color: #f4212e;
+}
+
+.xsave-harvester-btn.xsave-progress,
+.xsave-harvester-btn.twitterdl-progress {
+  color: rgb(29, 155, 240);
+}
+
+.xsave-harvester-pct,
+.twitterdl-pct {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes xsave-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+#twitterdl-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  z-index: 99999;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  animation: twitterdl-fadein 0.2s ease;
+}
+
+@keyframes twitterdl-fadein {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Right-click Save as GIF — same theme tokens as #xsave-picker */
+#xsave-gif-menu {
+  position: fixed;
+  z-index: 2147483647;
+  min-width: 180px;
+  padding: 6px;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* defaults = dim */
+  --xm-card: #15202b;
+  --xm-border: #38444d;
+  --xm-text: #e7e9ea;
+  --xm-hover: rgba(255, 255, 255, 0.06);
+  --xm-accent: #1d9bf0;
+  --xm-accent-bg: rgba(29, 155, 240, 0.15);
+  background: var(--xm-card);
+  border: 1px solid var(--xm-border);
+  color: var(--xm-text);
+}
+
+#xsave-gif-menu[data-x-theme="light"] {
+  --xm-card: #ffffff;
+  --xm-border: #eff3f4;
+  --xm-text: #0f1419;
+  --xm-hover: rgba(15, 20, 25, 0.05);
+  --xm-accent: #1d9bf0;
+  --xm-accent-bg: rgba(29, 155, 240, 0.12);
+}
+
+#xsave-gif-menu[data-x-theme="dim"] {
+  --xm-card: #15202b;
+  --xm-border: #38444d;
+  --xm-text: #e7e9ea;
+  --xm-hover: rgba(255, 255, 255, 0.06);
+  --xm-accent: #1d9bf0;
+  --xm-accent-bg: rgba(29, 155, 240, 0.15);
+}
+
+#xsave-gif-menu[data-x-theme="lights-out"] {
+  --xm-card: #000000;
+  --xm-border: #2f3336;
+  --xm-text: #e7e9ea;
+  --xm-hover: rgba(255, 255, 255, 0.08);
+  --xm-accent: #1d9bf0;
+  --xm-accent-bg: rgba(29, 155, 240, 0.18);
+}
+
+.xsave-gif-menu-item {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--xm-text);
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.xsave-gif-menu-item:hover {
+  background: var(--xm-accent-bg);
+  color: var(--xm-accent);
+}
+
+/* —— Media picker: follows X light / dim / lights-out —— */
+#xsave-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* defaults = dim; overridden by data-x-theme */
+  --xp-overlay: rgba(91, 112, 131, 0.4);
+  --xp-card: #15202b;
+  --xp-border: #38444d;
+  --xp-text: #e7e9ea;
+  --xp-muted: #8b98a5;
+  --xp-row: rgba(255, 255, 255, 0.03);
+  --xp-row-hover: rgba(255, 255, 255, 0.06);
+  --xp-thumb-bg: #38444d;
+  --xp-primary-bg: #eff3f4;
+  --xp-primary-fg: #0f1419;
+  --xp-ghost-border: #536471;
+  --xp-focus: #1d9bf0;
+  background: var(--xp-overlay);
+}
+
+#xsave-picker[data-x-theme="light"] {
+  --xp-overlay: rgba(0, 0, 0, 0.4);
+  --xp-card: #ffffff;
+  --xp-border: #eff3f4;
+  --xp-text: #0f1419;
+  --xp-muted: #536471;
+  --xp-row: rgba(0, 0, 0, 0.03);
+  --xp-row-hover: rgba(0, 0, 0, 0.06);
+  --xp-thumb-bg: #eff3f4;
+  --xp-primary-bg: #0f1419;
+  --xp-primary-fg: #ffffff;
+  --xp-ghost-border: #cfd9de;
+}
+
+#xsave-picker[data-x-theme="dim"] {
+  --xp-overlay: rgba(91, 112, 131, 0.4);
+  --xp-card: #15202b;
+  --xp-border: #38444d;
+  --xp-text: #e7e9ea;
+  --xp-muted: #8b98a5;
+  --xp-row: rgba(255, 255, 255, 0.03);
+  --xp-row-hover: rgba(255, 255, 255, 0.06);
+  --xp-thumb-bg: #38444d;
+  --xp-primary-bg: #eff3f4;
+  --xp-primary-fg: #0f1419;
+  --xp-ghost-border: #536471;
+}
+
+#xsave-picker[data-x-theme="lights-out"] {
+  --xp-overlay: rgba(91, 112, 131, 0.4);
+  --xp-card: #000000;
+  --xp-border: #2f3336;
+  --xp-text: #e7e9ea;
+  --xp-muted: #71767b;
+  --xp-row: rgba(255, 255, 255, 0.04);
+  --xp-row-hover: rgba(255, 255, 255, 0.08);
+  --xp-thumb-bg: #2f3336;
+  --xp-primary-bg: #eff3f4;
+  --xp-primary-fg: #0f1419;
+  --xp-ghost-border: #536471;
+}
+
+.xsave-picker-card {
+  width: min(420px, 100%);
+  background: var(--xp-card);
+  border: 1px solid var(--xp-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  color: var(--xp-text);
+}
+
+.xsave-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.xsave-picker-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--xp-text);
+  margin: 0;
+}
+
+.xsave-picker-close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--xp-muted);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: inherit;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.xsave-picker-close:hover {
+  background: var(--xp-row-hover);
+  color: var(--xp-text);
+}
+
+.xsave-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 50vh;
+  overflow: auto;
+  margin-bottom: 14px;
+}
+
+.xsave-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  background: var(--xp-row);
+  color: var(--xp-text);
+}
+
+.xsave-picker-row:hover {
+  background: var(--xp-row-hover);
+}
+
+.xsave-picker-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--xp-focus);
+  flex-shrink: 0;
+}
+
+.xsave-picker-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--xp-thumb-bg);
+  flex-shrink: 0;
+  border: 1px solid var(--xp-border);
+}
+
+.xsave-picker-thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--xp-muted);
+}
+
+.xsave-picker-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--xp-text);
+}
+
+.xsave-picker-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.xsave-picker-btn {
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.xsave-picker-btn.primary {
+  background: var(--xp-primary-bg);
+  color: var(--xp-primary-fg);
+}
+
+.xsave-picker-btn.primary:hover {
+  opacity: 0.9;
+}
+
+.xsave-picker-btn.ghost {
+  background: transparent;
+  color: var(--xp-text);
+  border: 1px solid var(--xp-ghost-border);
+}
+
+.xsave-picker-btn.ghost:hover {
+  background: var(--xp-row-hover);
+}
+
+
+/* Status permalink: JS sets SVG/wrap to Share's live px; don't fight it */
+.xsave-harvester--status .xsave-harvester-icon-wrap {
+  width: auto;
+  height: auto;
+  min-width: 34.75px;
+  min-height: 34.75px;
+}
+.xsave-harvester-btn--status svg {
+  /* inline width/height from applyStatusIconMetrics win */
+}

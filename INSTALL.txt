@@ -1,0 +1,11 @@
+X Media Downloader — load unpacked (Chrome / Brave / Edge)
+
+1. Open chrome://extensions (or brave://extensions / edge://extensions)
+2. Developer mode ON
+3. Load unpacked → this folder (the one with manifest.json)
+4. After updates: Reload on the extension card, then refresh the X tab
+
+Usage
+- Tweets with their own media get a download control in the action bar
+- Text-only quotes of someone else's media do not
+- Right-click a GIF → Save as GIF (Shift+right-click keeps the site menu)

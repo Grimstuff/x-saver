@@ -1,0 +1,69 @@
+{
+  "permissions": [
+    "downloads",
+    "offscreen",
+    "storage",
+    "contextMenus",
+    "cookies"
+  ],
+  "description": "Download media from X (Twitter): videos, images, and GIFs. Convert Twitter GIFs to real .gif files in your browser.",
+  "short_name": "X Download",
+  "manifest_version": 3,
+  "version": "1.4.30",
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "https://cdn.syndication.twimg.com/*",
+    "https://video.twimg.com/*",
+    "https://pbs.twimg.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "name": "Simple X Download Button",
+  "options_ui": {
+    "page": "src/options.html",
+    "open_in_tab": false
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "128": "icons/icon128.png",
+    "48": "icons/icon48.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "128": "icons/icon128.png",
+      "48": "icons/icon48.png"
+    },
+    "default_popup": "src/popup.html"
+  },
+  "content_scripts": [
+    {
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": false,
+      "matches": [
+        "https://twitter.com/*",
+        "https://x.com/*"
+      ],
+      "js": [
+        "src/page-hook.js"
+      ]
+    },
+    {
+      "run_at": "document_end",
+      "all_frames": false,
+      "matches": [
+        "https://twitter.com/*",
+        "https://x.com/*"
+      ],
+      "css": [
+        "src/styles.css"
+      ],
+      "js": [
+        "src/content.js"
+      ]
+    }
+  ]
+}
