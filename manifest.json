@@ -9,7 +9,7 @@
   "description": "Download media from X (Twitter): videos, images, and GIFs. Convert Twitter GIFs to real .gif files in your browser.",
   "short_name": "X Download",
   "manifest_version": 3,
-  "version": "1.4.30",
+  "version": "1.4.31",
   "host_permissions": [
     "https://x.com/*",
     "https://twitter.com/*",

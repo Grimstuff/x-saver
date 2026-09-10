@@ -142,6 +142,16 @@ function nearestStatusId(el, rootArticle) {
   return bestId;
 }
 
+function cardWrapsOwnPermalink(card, ownId) {
+  if (!card || !ownId) return false;
+  for (const time of card.querySelectorAll("time")) {
+    const link = time.closest?.('a[href*="/status/"]');
+    const id = link?.href.match(/\/status\/(\d+)/)?.[1];
+    if (id && String(id) === String(ownId)) return true;
+  }
+  return false;
+}
+
 function findQuotedTweetRoot(rootArticle) {
   if (!rootArticle) return null;
 
@@ -155,6 +165,9 @@ function findQuotedTweetRoot(rootArticle) {
   let quoteLink = null;
   for (const card of rootArticle.querySelectorAll('[role="link"]')) {
     if (card.querySelector?.('[role="group"]')) continue;
+    // Outer tweet body is often role=link and also contains the nested quote.
+    // Never treat a wrapper that includes THIS tweet's <time> permalink as the quote root.
+    if (cardWrapsOwnPermalink(card, ownId)) continue;
     const ids = [...card.querySelectorAll('a[href*="/status/"]')]
       .map((a) => a.href.match(/\/status\/(\d+)/)?.[1])
       .filter(Boolean);
@@ -190,13 +203,14 @@ function findQuotedTweetRoot(rootArticle) {
     if (!near || (ownId && near === String(ownId))) continue;
     const common = domLca(seed, media, rootArticle);
     if (!common || common === rootArticle) continue;
+    // Don't expand the quote root so far that it swallows this tweet's own permalink/media.
+    if (cardWrapsOwnPermalink(common, ownId)) continue;
     if (common.contains(best)) best = common;
     else if (!best.contains(common)) best = common;
   }
   return best;
 }
 
-/** True if el lives under a quoted-tweet card inside rootArticle. */
 function isInsideQuotedTweet(el, rootArticle) {
   if (!el || !rootArticle) return false;
 
@@ -208,13 +222,17 @@ function isInsideQuotedTweet(el, rootArticle) {
     node = node.parentElement;
   }
 
+  const ownId = ownTweetIdFromTime(rootArticle);
+  const near = nearestStatusId(el, rootArticle);
+  // Media closest to THIS tweet's permalink is own media — even if a coarse
+  // quote-root heuristic (oversized role=link) would contain it.
+  if (near && ownId && String(near) === String(ownId)) return false;
+
   const quoteRoot = findQuotedTweetRoot(rootArticle);
   if (quoteRoot && (quoteRoot === el || quoteRoot.contains(el))) return true;
 
   // Nearest /status/ link wins — feed sibling quote video is closer to the
   // quoted permalink than to this card's own <time> link.
-  const ownId = ownTweetIdFromTime(rootArticle);
-  const near = nearestStatusId(el, rootArticle);
   if (near && ownId && String(near) !== String(ownId)) return true;
   return false;
 }
@@ -243,8 +261,8 @@ const ownMediaPresence = new Map();
 
 /**
  * Check whether THIS tweet has downloadable media.
- * Prefer syndication mediaDetails; if empty/tombstoned (common for NSFW), fall back to DOM.
- * Quote-only posts stay buttonless until/unless own media appears in the DOM.
+ * Prefer DOM own-media, then syndication mediaDetails (own tweet only).
+ * Quote-only / text-only quotes stay buttonless when API+DOM find no own media.
  */
 function articleHasOnlyQuoteMedia(article) {
   if (!article) return false;
@@ -267,13 +285,6 @@ function articleHasOnlyQuoteMedia(article) {
 async function parentHasOwnMedia(tweetId, article) {
   if (!tweetId) return false;
 
-  // Text-only quote of a media post: never show a button (and never trust API/cache).
-  if (articleHasOnlyQuoteMedia(article)) {
-    ownMediaPresence.delete(tweetId);
-    dlog("parentHasOwnMedia quote-only article", tweetId);
-    return false;
-  }
-
   if (ownMediaPresence.has(tweetId)) return ownMediaPresence.get(tweetId);
 
   const domOwn = hasMediaDom(article);
@@ -282,19 +293,14 @@ async function parentHasOwnMedia(tweetId, article) {
     return true;
   }
 
-  // Quote card / foreign status present but no own DOM media → no button.
-  // Do not fall through to GraphQL/syndication (those can confuse quote embeds).
-  if (findQuotedTweetRoot(article) || articleHasOnlyQuoteMedia(article)) {
-    dlog("parentHasOwnMedia quote present without own DOM media", tweetId);
-    return false;
-  }
-
+  // Syndication/GraphQL mediaDetails are THIS tweet only (never quoted_tweet).
+  // Quote+own-media posts often fail DOM heuristics when a large role=link wraps
+  // both the quote card and the parent's media — still show the button when the
+  // API reports own media. Text-only quotes get empty mediaDetails → buttonless.
   try {
     const res = await fetchMediaInfo(tweetId);
     const ok = (res?.items?.length ?? 0) > 0;
     if (ok) {
-      // Re-check quote-only after async gap
-      if (articleHasOnlyQuoteMedia(article)) return false;
       ownMediaPresence.set(tweetId, true);
       return true;
     }
@@ -303,7 +309,16 @@ async function parentHasOwnMedia(tweetId, article) {
     dlog("parentHasOwnMedia API failed, DOM fallback", err);
   }
 
-  return hasMediaDom(article);
+  // No own media from API: keep quote-only / text-only quotes buttonless.
+  if (articleHasOnlyQuoteMedia(article)) {
+    ownMediaPresence.set(tweetId, false);
+    dlog("parentHasOwnMedia quote-only article", tweetId);
+    return false;
+  }
+
+  const fallback = hasMediaDom(article);
+  ownMediaPresence.set(tweetId, fallback);
+  return fallback;
 }
 
 function findShareButton(actionBar) {
